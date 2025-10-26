@@ -2,14 +2,14 @@ from random import choice
 from telebot import TeleBot, types
 import json
 
-API_TOKEN = '7987526576:AAHUKP7w5kwZG-Pp7tzfLYzxIo6-E2tu2dg'
+API_TOKEN = '!!!!!!!!!!' #ВСТАВЬТЕ ВАШ!!!!!!!
 
 bot = TeleBot(API_TOKEN)
 game = False  # Состояние игры
 used_words = []  # Сохраняем здесь все использованные слова
 letter = ''  # Буква на которую надо придумать слово
 
-
+leaderboard = {}
 
 with open('cities.txt', 'r', encoding='utf-8') as f:
     cities = [word.strip().lower() for word in f.readlines()]
@@ -22,24 +22,32 @@ def select_letter(text):
 
 @bot.message_handler(commands=['goroda'])
 def start_game(message):
-    global game
-    global letter
+    global game, letter, used_words
+    used_words = [] 
     game = True
     city = choice(cities)
     letter = select_letter(city)
     bot.send_message(message.chat.id, text=city)
 
 @bot.message_handler(commands=['leaderboard'])
-def leaderboard(message):
+def get_leaderboard(message):
     with open('leaders.json', 'r') as f:
         data = json.load(f)
-    table = '\n'.join([f"{k},{v}" for k,v in data.values()])
-    bot.send_message(message.chat.id, text=table)
+    player_list = [f'{k}: {v}' for k,v in data.items()]
+    text = '\n'.join(player_list)
+    print(player_list)
+    bot.send_message(message.chat.id, text=text)
     
+
+@bot.message_handler(commands=['save'])
+def save_leaderboard(message):
+    with open('leaders.json', 'w') as f:
+        json.dump(leaderboard, f)
+    bot.send_message(message.chat.id, text='Успешно сохранено')
 
 @bot.message_handler()
 def play(message):
-    global used_words, letter, game, cities
+    global used_words, letter, game, cities, leaderboard
 
     if game:
         if message.text.lower() in used_words:
@@ -53,7 +61,11 @@ def play(message):
             used_words.append(message.text.lower())
 
 
-            add_to_leaderboard(message.from_user)
+
+            if message.from_user.first_name in leaderboard:
+                leaderboard[message.from_user.first_name] +=1
+            else:
+                leaderboard[message.from_user.first_name] = 1
 
             #Выбираем город
             choose_cities = []
@@ -78,4 +90,5 @@ def play(message):
 
 # Запускаем бота
 bot.polling(none_stop=True)
+
 
