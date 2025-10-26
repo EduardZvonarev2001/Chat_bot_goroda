@@ -10,6 +10,7 @@ used_words = []  # Сохраняем здесь все использованн
 letter = ''  # Буква на которую надо придумать слово
 
 
+
 with open('cities.txt', 'r', encoding='utf-8') as f:
     cities = [word.strip().lower() for word in f.readlines()]
 
@@ -34,19 +35,6 @@ def leaderboard(message):
         data = json.load(f)
     table = '\n'.join([f"{k},{v}" for k,v in data.values()])
     bot.send_message(message.chat.id, text=table)
-
-
-def add_to_leaderboard(user):
-    with open('leaders.json', 'r') as f:
-        data = json.load(f)
-        
-    if data[user]:
-        data[user]+=1
-    else:
-        data[user] = 1
-
-    with open('leaders.json', 'w') as f:
-        json.dump(data, f)
     
 
 @bot.message_handler()
@@ -90,3 +78,4 @@ def play(message):
 
 # Запускаем бота
 bot.polling(none_stop=True)
+
